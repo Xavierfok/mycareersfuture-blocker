@@ -92,29 +92,41 @@
   }
 
   function injectCardButton(card, job) {
-    const mount = card.querySelector(SELECTORS.cardMount);
-    if (!mount) return;
-    // check sentinel on mount's next sibling chain to avoid double-inject
-    if (mount.nextElementSibling?.getAttribute("data-mcf-blocker-btn") === "1") return;
+    // the employer <p> lives inside <a data-testid="job-card-link">, so a button
+    // mounted next to it would be inside the anchor and clicks would navigate.
+    // mount the button directly on the card (sibling of the anchor) with absolute
+    // positioning. the card has class "card relative" so position:relative is set.
+    if (card.querySelector(":scope > [data-mcf-blocker-btn]")) return;
+    if (!job.employer) return;
 
     const btn = document.createElement("button");
     btn.setAttribute("data-mcf-blocker-btn", "1");
     btn.type = "button";
     btn.textContent = "🚫 block";
+    btn.title = `block "${job.employer}"`;
     btn.style.cssText =
-      "margin-left:8px;padding:2px 6px;font-size:11px;background:#fff;border:1px solid #c00;color:#c00;border-radius:4px;cursor:pointer;display:inline-block;vertical-align:middle;";
+      "position:absolute;top:6px;left:6px;z-index:10;padding:3px 7px;font-size:11px;background:#fff;border:1px solid #c00;color:#c00;border-radius:4px;cursor:pointer;font-weight:600;";
+    // stop propagation on pointerdown, mousedown, and click because react/SPAs
+    // sometimes wire listeners at different phases.
+    const stop = (e) => { e.stopPropagation(); e.stopImmediatePropagation(); };
+    btn.addEventListener("pointerdown", stop);
+    btn.addEventListener("mousedown", stop);
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
-      e.stopPropagation();
+      stop(e);
+      btn.disabled = true;
+      btn.textContent = "blocking...";
       try {
         await addCompany(job.employer);
         state = await loadState();
         applyBlocking();
       } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "🚫 block";
         alert("mcf-blocker: " + err.message);
       }
     });
-    mount.insertAdjacentElement("afterend", btn);
+    card.appendChild(btn);
   }
 
   function tryInjectDetailButton() {
