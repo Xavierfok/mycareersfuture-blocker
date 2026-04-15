@@ -224,4 +224,15 @@
   }
 
   startObserver();
+
+  chrome.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== "sync") return;
+    if (!("blockedCompanies" in changes) && !("blockedKeywords" in changes)) return;
+    try {
+      state = await loadState();
+      applyBlocking();
+    } catch (err) {
+      console.error("[mcf-blocker] onChanged reload failed", err);
+    }
+  });
 })();
