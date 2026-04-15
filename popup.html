@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>mycareersfuture blocker</title>
+</head>
+<body>
+  <header><h1>mycareersfuture blocker</h1></header>
+
+  <section>
+    <h2>blocked companies</h2>
+    <ul id="companies" class="list"></ul>
+    <p id="empty-companies" class="empty">no companies blocked yet. click "🚫 block" next to any job to add one.</p>
+  </section>
+
+  <section>
+    <h2>keyword rules</h2>
+    <ul id="keywords" class="list"></ul>
+    <p id="empty-keywords" class="empty">no keyword rules.</p>
+    <form id="kw-form">
+      <input id="kw-input" type="text" placeholder="add a keyword (e.g. recruitment)" maxlength="100" required>
+      <button type="submit">add</button>
+    </form>
+  </section>
+
+  <footer id="footer"></footer>
+  <div id="error" class="error" hidden></div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
