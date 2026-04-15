@@ -2,12 +2,30 @@
 
 chrome extension (manifest v3) that hides jobs from specific companies on https://www.mycareersfuture.gov.sg.
 
-## install (developer mode)
+one-click block from any job card, manual keyword rules for broader patterns, auto-advance to the next page when your current page is mostly blocked.
 
-1. clone this repo
-2. `npm install` (only needed if you want to run tests)
-3. open `chrome://extensions/`, enable developer mode (top right toggle)
-4. click "load unpacked", select this folder
+## install
+
+### option 1: from the latest release (recommended for most users)
+
+1. go to the [releases page](https://github.com/Xavierfok/mycareersfuture-blocker/releases/latest) and download `mycareersfuture-blocker-v*.zip`
+2. unzip it somewhere (e.g. `~/Downloads/mycareersfuture-blocker/`)
+3. open `chrome://extensions/` in chrome
+4. toggle **developer mode** on (top-right corner)
+5. click **"load unpacked"** and select the unzipped folder
+6. the extension is now installed. pin it to your toolbar for easy access.
+
+to update: download the new release, replace the folder, and click the ↻ reload button on the extension card in `chrome://extensions/`.
+
+### option 2: clone and load unpacked (for developers)
+
+1. `git clone https://github.com/Xavierfok/mycareersfuture-blocker.git`
+2. (optional) `npm install && npm test` to run the test suite
+3. in `chrome://extensions/`, enable developer mode, click "load unpacked", select the repo folder
+
+### option 3: chrome web store
+
+coming soon.
 
 ## usage
 
@@ -57,3 +75,11 @@ docs/superpowers/        # spec + implementation plan
 - no import/export of blocklist
 - a11y + i18n polish deferred
 - site changes that alter `data-testid` values will require editing `selectors.js` + re-running `scripts/capture-fixtures.mjs`
+
+## privacy
+
+the extension stores only your blocklist (company names + keyword rules), in chrome's built-in storage. no data leaves your browser. the extension makes no network requests and runs only on `mycareersfuture.gov.sg`. full [privacy policy](./PRIVACY.md).
+
+## license
+
+MIT.
