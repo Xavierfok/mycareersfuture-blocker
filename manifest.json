@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "mycareersfuture blocker",
+  "version": "0.1.0",
+  "description": "block specific companies from appearing in your mycareersfuture.gov.sg searches.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.mycareersfuture.gov.sg/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.mycareersfuture.gov.sg/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.mycareersfuture.gov.sg/*"],
+      "css": ["hide-before-ready.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_title": "mycareersfuture blocker",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
