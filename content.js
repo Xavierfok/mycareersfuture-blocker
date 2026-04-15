@@ -120,6 +120,7 @@
         await addCompany(job.employer);
         state = await loadState();
         applyBlocking();
+        maybeAutoPaginate();
       } catch (err) {
         btn.disabled = false;
         btn.textContent = "🚫 block";
@@ -127,6 +128,36 @@
       }
     });
     card.appendChild(btn);
+  }
+
+  // ---- auto-paginate after block ----
+  // when an explicit block drops visible-card count below MIN_VISIBLE, click the
+  // site's "next page" button. triggered only from the block handler (never from
+  // the observer) so it never runs without explicit user intent.
+  const MIN_VISIBLE_AFTER_BLOCK = 10;
+  let autoPaginateCooldown = false;
+
+  function countVisibleCards() {
+    let count = 0;
+    for (const c of document.querySelectorAll(SELECTORS.listingCard)) {
+      if (c.getAttribute("data-mcf-hidden") !== "1") count++;
+    }
+    return count;
+  }
+
+  function maybeAutoPaginate() {
+    if (autoPaginateCooldown) return;
+    if (countVisibleCards() >= MIN_VISIBLE_AFTER_BLOCK) return;
+
+    const nextBtn = document.querySelector('[data-testid="pagination-button--❯"]');
+    if (!nextBtn || nextBtn.disabled) return;
+
+    // cooldown prevents accidental double-advances if the user rapidly blocks
+    // multiple companies; reset after 2s gives the site time to render the next page.
+    autoPaginateCooldown = true;
+    setTimeout(() => { autoPaginateCooldown = false; }, 2000);
+
+    nextBtn.click();
   }
 
   function tryInjectDetailButton() {
