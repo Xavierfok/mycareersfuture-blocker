@@ -128,4 +128,40 @@
     console.error("[mcf-blocker] init fatal", err);
     document.documentElement.classList.add("mcf-blocker-ready");
   });
+
+  // ---- mutation observer ----
+  let rafHandle = null;
+  let trailingTimer = null;
+
+  function scheduleApply() {
+    if (rafHandle) return;
+    rafHandle = requestAnimationFrame(() => {
+      rafHandle = null;
+      if (trailingTimer) clearTimeout(trailingTimer);
+      trailingTimer = setTimeout(() => {
+        trailingTimer = null;
+        applyBlocking();
+      }, 100);
+    });
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    if (applying) return;
+    for (const m of mutations) {
+      if (m.type === "childList" && (m.addedNodes.length || m.removedNodes.length)) {
+        scheduleApply();
+        break;
+      }
+    }
+  });
+
+  function startObserver() {
+    if (!document.body) {
+      document.addEventListener("DOMContentLoaded", startObserver, { once: true });
+      return;
+    }
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  startObserver();
 })();
