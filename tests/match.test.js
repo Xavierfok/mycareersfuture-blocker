@@ -31,3 +31,36 @@ test("normalize: strips trailing punctuation", () => {
   assert.equal(normalize("acme."), "acme");
   assert.equal(normalize("acme,"), "acme");
 });
+
+import { isBlocked } from "../match.js";
+
+test("isBlocked: exact normalized employer match hides", () => {
+  const state = { blockedCompanies: ["acme"], blockedKeywords: [] };
+  assert.equal(isBlocked({ employer: "ACME Pte Ltd", title: "Engineer" }, state), true);
+});
+
+test("isBlocked: no match returns false", () => {
+  const state = { blockedCompanies: ["acme"], blockedKeywords: [] };
+  assert.equal(isBlocked({ employer: "Globex", title: "Engineer" }, state), false);
+});
+
+test("isBlocked: keyword substring in employer hides", () => {
+  const state = { blockedCompanies: [], blockedKeywords: ["recruitment"] };
+  assert.equal(isBlocked({ employer: "Acme Recruitment", title: "Engineer" }, state), true);
+});
+
+test("isBlocked: keyword substring in title hides", () => {
+  const state = { blockedCompanies: [], blockedKeywords: ["commission only"] };
+  assert.equal(isBlocked({ employer: "Acme", title: "Sales - Commission Only" }, state), true);
+});
+
+test("isBlocked: empty state never blocks", () => {
+  const state = { blockedCompanies: [], blockedKeywords: [] };
+  assert.equal(isBlocked({ employer: "Acme", title: "Engineer" }, state), false);
+});
+
+test("isBlocked: handles missing fields", () => {
+  const state = { blockedCompanies: ["acme"], blockedKeywords: [] };
+  assert.equal(isBlocked({ employer: "", title: "" }, state), false);
+  assert.equal(isBlocked({ employer: null, title: null }, state), false);
+});

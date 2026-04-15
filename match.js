@@ -25,3 +25,20 @@ export function normalize(s) {
   out = out.replace(/[.,;:!?]+$/g, "").trim();
   return out;
 }
+
+export function isBlocked(job, state) {
+  const employer = job?.employer ?? "";
+  const title = job?.title ?? "";
+  if (!employer && !title) return false;
+
+  const normEmployer = normalize(employer);
+  if (state.blockedCompanies.includes(normEmployer)) return true;
+
+  const lowerEmployer = employer.toLowerCase();
+  const lowerTitle = title.toLowerCase();
+  for (const kw of state.blockedKeywords) {
+    if (!kw) continue;
+    if (lowerEmployer.includes(kw) || lowerTitle.includes(kw)) return true;
+  }
+  return false;
+}
