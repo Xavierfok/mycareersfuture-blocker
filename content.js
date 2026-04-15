@@ -117,6 +117,37 @@
     mount.insertAdjacentElement("afterend", btn);
   }
 
+  function tryInjectDetailButton() {
+    // detect detail page: url path starts with /job/
+    if (!/^\/job\//.test(location.pathname)) return;
+
+    const mount = document.querySelector(SELECTORS.detailMount);
+    if (!mount) return;
+    if (mount.nextElementSibling?.getAttribute("data-mcf-blocker-detail-btn") === "1") return;
+
+    const job = extractJobFromDetail(document);
+    if (!job.employer) return;
+
+    const btn = document.createElement("button");
+    btn.setAttribute("data-mcf-blocker-detail-btn", "1");
+    btn.type = "button";
+    btn.textContent = "🚫 block this company";
+    btn.style.cssText =
+      "margin:8px 0;padding:6px 12px;background:#fff;border:1px solid #c00;color:#c00;border-radius:4px;cursor:pointer;display:inline-block;";
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        await addCompany(job.employer);
+        state = await loadState();
+        btn.textContent = "🚫 blocked";
+        btn.disabled = true;
+      } catch (err) {
+        alert("mcf-blocker: " + err.message);
+      }
+    });
+    mount.insertAdjacentElement("afterend", btn);
+  }
+
   function applyBlocking() {
     if (applying) return;
     applying = true;
@@ -134,6 +165,7 @@
         }
         injectCardButton(card, job);
       }
+      tryInjectDetailButton();
     } catch (err) {
       console.error("[mcf-blocker] applyBlocking failed", err);
     } finally {
