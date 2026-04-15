@@ -91,6 +91,32 @@
     await chrome.storage.sync.set({ blockedCompanies: [...current.blockedCompanies, norm] });
   }
 
+  function injectCardButton(card, job) {
+    const mount = card.querySelector(SELECTORS.cardMount);
+    if (!mount) return;
+    // check sentinel on mount's next sibling chain to avoid double-inject
+    if (mount.nextElementSibling?.getAttribute("data-mcf-blocker-btn") === "1") return;
+
+    const btn = document.createElement("button");
+    btn.setAttribute("data-mcf-blocker-btn", "1");
+    btn.type = "button";
+    btn.textContent = "🚫 block";
+    btn.style.cssText =
+      "margin-left:8px;padding:2px 6px;font-size:11px;background:#fff;border:1px solid #c00;color:#c00;border-radius:4px;cursor:pointer;display:inline-block;vertical-align:middle;";
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        await addCompany(job.employer);
+        state = await loadState();
+        applyBlocking();
+      } catch (err) {
+        alert("mcf-blocker: " + err.message);
+      }
+    });
+    mount.insertAdjacentElement("afterend", btn);
+  }
+
   function applyBlocking() {
     if (applying) return;
     applying = true;
@@ -101,10 +127,12 @@
         if (isBlocked(job, state)) {
           card.style.display = "none";
           card.setAttribute("data-mcf-hidden", "1");
+          continue;
         } else if (card.getAttribute("data-mcf-hidden") === "1") {
           card.style.display = "";
           card.removeAttribute("data-mcf-hidden");
         }
+        injectCardButton(card, job);
       }
     } catch (err) {
       console.error("[mcf-blocker] applyBlocking failed", err);
