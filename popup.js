@@ -1,4 +1,4 @@
-import { load, addCompany, removeCompany, addKeyword, removeKeyword } from "./storage.js";
+import { load, addCompany, removeCompany, addKeyword, removeKeyword, setHideApplied } from "./storage.js";
 
 const els = {
   companies: document.getElementById("companies"),
@@ -8,6 +8,7 @@ const els = {
   footer: document.getElementById("footer"),
   kwForm: document.getElementById("kw-form"),
   kwInput: document.getElementById("kw-input"),
+  hideApplied: document.getElementById("hide-applied"),
   error: document.getElementById("error"),
 };
 
@@ -52,10 +53,19 @@ async function render() {
   renderList(els.companies, state.blockedCompanies, removeCompany);
   renderList(els.keywords, state.blockedKeywords, removeKeyword);
 
+  els.hideApplied.checked = state.hideApplied;
   els.emptyCompanies.hidden = state.blockedCompanies.length > 0;
   els.emptyKeywords.hidden = state.blockedKeywords.length > 0;
   els.footer.textContent = `${state.blockedCompanies.length} companies · ${state.blockedKeywords.length} keywords blocked`;
 }
+
+els.hideApplied.addEventListener("change", async () => {
+  try {
+    await setHideApplied(els.hideApplied.checked);
+  } catch (err) {
+    showError(err.message);
+  }
+});
 
 els.kwForm.addEventListener("submit", async (e) => {
   e.preventDefault();

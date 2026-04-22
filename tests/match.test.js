@@ -32,6 +32,25 @@ test("normalize: strips trailing punctuation", () => {
   assert.equal(normalize("acme,"), "acme");
 });
 
+import { hasAppliedText } from "../match.js";
+
+test("hasAppliedText: matches any occurrence of the word Applied", () => {
+  assert.equal(hasAppliedText("Applied 3 days ago"), true);
+  assert.equal(hasAppliedText("Applied 1 day ago"), true);
+  assert.equal(hasAppliedText("Applied today"), true);
+  assert.equal(hasAppliedText("Applied just now"), true);
+  assert.equal(hasAppliedText("Status: Applied"), true);
+  assert.equal(hasAppliedText("Applied"), true);
+  assert.equal(hasAppliedText("APPLIED 2 WEEKS AGO"), true);
+});
+
+test("hasAppliedText: ignores unrelated text", () => {
+  assert.equal(hasAppliedText("Apply now"), false);
+  assert.equal(hasAppliedText("Reapplied for role"), false);
+  assert.equal(hasAppliedText(""), false);
+  assert.equal(hasAppliedText(null), false);
+});
+
 import { isBlocked } from "../match.js";
 
 test("isBlocked: exact normalized employer match hides", () => {

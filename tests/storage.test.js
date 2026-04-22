@@ -8,7 +8,17 @@ beforeEach(() => { mock = installChromeMock(); });
 test("load: returns defaults when empty", async () => {
   const { load } = await import("../storage.js");
   const state = await load();
-  assert.deepEqual(state, { schemaVersion: 1, blockedCompanies: [], blockedKeywords: [] });
+  assert.deepEqual(state, { schemaVersion: 1, blockedCompanies: [], blockedKeywords: [], hideApplied: true });
+});
+
+test("setHideApplied: persists boolean", async () => {
+  const { setHideApplied, load } = await import("../storage.js");
+  await setHideApplied(false);
+  let state = await load();
+  assert.equal(state.hideApplied, false);
+  await setHideApplied(true);
+  state = await load();
+  assert.equal(state.hideApplied, true);
 });
 
 test("addCompany: normalizes and stores", async () => {

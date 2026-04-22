@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "mycareersfuture blocker",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "block specific companies from appearing in your mycareersfuture.gov.sg searches.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.mycareersfuture.gov.sg/*"],

@@ -5,3 +5,8 @@ html:not(.mcf-blocker-ready) [data-testid="card-list"],
 html:not(.mcf-blocker-ready) [data-testid="job-card"] {
   visibility: hidden !important;
 }
+
+/* enforce hide via attribute so React re-renders can't reset inline display */
+[data-mcf-hidden="1"] {
+  display: none !important;
+}

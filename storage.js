@@ -1,13 +1,19 @@
 import { normalize } from "./match.js";
 
-const KEYS = { SCHEMA: "schemaVersion", COMPANIES: "blockedCompanies", KEYWORDS: "blockedKeywords" };
+const KEYS = {
+  SCHEMA: "schemaVersion",
+  COMPANIES: "blockedCompanies",
+  KEYWORDS: "blockedKeywords",
+  HIDE_APPLIED: "hideApplied",
+};
 
 export async function load() {
-  const raw = await chrome.storage.sync.get([KEYS.SCHEMA, KEYS.COMPANIES, KEYS.KEYWORDS]);
+  const raw = await chrome.storage.sync.get([KEYS.SCHEMA, KEYS.COMPANIES, KEYS.KEYWORDS, KEYS.HIDE_APPLIED]);
   return {
     schemaVersion: raw[KEYS.SCHEMA] ?? 1,
     blockedCompanies: raw[KEYS.COMPANIES] ?? [],
     blockedKeywords: raw[KEYS.KEYWORDS] ?? [],
+    hideApplied: raw[KEYS.HIDE_APPLIED] ?? true,
   };
 }
 
@@ -46,6 +52,10 @@ export async function addKeyword(raw) {
 export async function removeKeyword(kw) {
   const state = await load();
   await write({ [KEYS.KEYWORDS]: state.blockedKeywords.filter(x => x !== kw) });
+}
+
+export async function setHideApplied(value) {
+  await write({ [KEYS.HIDE_APPLIED]: !!value });
 }
 
 export async function initDefaults() {

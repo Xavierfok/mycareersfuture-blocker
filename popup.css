@@ -14,3 +14,5 @@ button[type=submit] { padding: 4px 10px; background: #080; color: #fff; border: 
 button[type=submit]:hover { background: #060; }
 footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid #eee; color: #888; font-size: 11px; }
 .error { margin-top: 8px; padding: 6px 8px; background: #fee; border: 1px solid #c00; color: #c00; border-radius: 3px; font-size: 12px; }
+.toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.toggle input { margin: 0; }

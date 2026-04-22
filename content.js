@@ -34,6 +34,15 @@
     return out;
   }
 
+  // matches any "Applied" status badge. duplicated from match.js because mv3
+  // content scripts don't support ES module imports natively.
+  const APPLIED_RE = /\bApplied\b/i;
+
+  function hasAppliedText(text) {
+    if (!text) return false;
+    return APPLIED_RE.test(text);
+  }
+
   function isBlocked(job, state) {
     const employer = job?.employer ?? "";
     const title = job?.title ?? "";
@@ -71,15 +80,16 @@
   }
 
   // ---- state ----
-  let state = { schemaVersion: 1, blockedCompanies: [], blockedKeywords: [] };
+  let state = { schemaVersion: 1, blockedCompanies: [], blockedKeywords: [], hideApplied: true };
   let applying = false;
 
   async function loadState() {
-    const raw = await chrome.storage.sync.get(["schemaVersion", "blockedCompanies", "blockedKeywords"]);
+    const raw = await chrome.storage.sync.get(["schemaVersion", "blockedCompanies", "blockedKeywords", "hideApplied"]);
     return {
       schemaVersion: raw.schemaVersion ?? 1,
       blockedCompanies: raw.blockedCompanies ?? [],
       blockedKeywords: raw.blockedKeywords ?? [],
+      hideApplied: raw.hideApplied ?? true,
     };
   }
 
@@ -191,16 +201,32 @@
     mount.insertAdjacentElement("afterend", btn);
   }
 
+  function cardIsApplied(card) {
+    // Check badge spans directly rather than card.textContent — MCF's card text
+    // doesn't always include descendant text reliably (possibly due to shadow
+    // roots or rendering order), but querySelectorAll finds the badge.
+    const badges = card.querySelectorAll('[data-cy="job-card-date-info"]');
+    for (const b of badges) {
+      if (/\bApplied\b/i.test(b.textContent)) return true;
+    }
+    // Fallback to full-card text scan in case site changes badge selector.
+    return hasAppliedText(card.textContent);
+  }
+
   function applyBlocking() {
     if (applying) return;
     applying = true;
     try {
       const cards = document.querySelectorAll(SELECTORS.listingCard);
+      let hidApplied = 0;
+      let hidBlocked = 0;
       for (const card of cards) {
         const job = extractJobFromCard(card);
-        if (isBlocked(job, state)) {
+        const appliedHide = state.hideApplied && cardIsApplied(card);
+        if (isBlocked(job, state) || appliedHide) {
           card.style.display = "none";
           card.setAttribute("data-mcf-hidden", "1");
+          if (appliedHide) hidApplied++; else hidBlocked++;
           continue;
         } else if (card.getAttribute("data-mcf-hidden") === "1") {
           card.style.display = "";
@@ -209,6 +235,7 @@
         injectCardButton(card, job);
       }
       tryInjectDetailButton();
+      console.log(`[mcf-blocker] pass: cards=${cards.length} hideApplied=${state.hideApplied} hidApplied=${hidApplied} hidBlocked=${hidBlocked}`);
     } catch (err) {
       console.error("[mcf-blocker] applyBlocking failed", err);
     } finally {
@@ -255,6 +282,10 @@
         scheduleApply();
         break;
       }
+      if (m.type === "characterData") {
+        scheduleApply();
+        break;
+      }
     }
   });
 
@@ -263,14 +294,20 @@
       document.addEventListener("DOMContentLoaded", startObserver, { once: true });
       return;
     }
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   }
 
   startObserver();
 
+  // fallback: React may populate card text after applyBlocking's first pass,
+  // and attribute-only mutations won't trigger the observer. re-check a few times.
+  setTimeout(applyBlocking, 1000);
+  setTimeout(applyBlocking, 3000);
+  setTimeout(applyBlocking, 6000);
+
   chrome.storage.onChanged.addListener(async (changes, area) => {
     if (area !== "sync") return;
-    if (!("blockedCompanies" in changes) && !("blockedKeywords" in changes)) return;
+    if (!("blockedCompanies" in changes) && !("blockedKeywords" in changes) && !("hideApplied" in changes)) return;
     try {
       state = await loadState();
       applyBlocking();
